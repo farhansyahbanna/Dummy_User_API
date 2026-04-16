@@ -32,16 +32,24 @@ app.get('/', (req, res) => {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => {
+      console.log('Connected to MongoDB');
+    })
+    .catch(err => {
+      console.error('MongoDB connection error:', err);
     });
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
+} else {
+  console.log('MONGODB_URI is not defined in environment variables');
+}
+
+// Only listen on local environment
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
   });
+}
 
 module.exports = app;
