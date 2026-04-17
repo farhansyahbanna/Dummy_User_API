@@ -15,7 +15,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+const swaggerUiOptions = {
+  customCss: '.swagger-ui { font-family: sans-serif; }',
+  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css',
+  customJs: [
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.js'
+  ],
+  customSiteTitle: 'User API Documentation'
+};
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, swaggerUiOptions));
 
 // Routes
 app.use('/api/users', userRoutes);
@@ -33,7 +42,9 @@ app.get('/', (req, res) => {
 
 // Connect to MongoDB
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI)
+  mongoose.connect(process.env.MONGODB_URI, { 
+    serverSelectionTimeoutMS: 5000 // Timeout early so Vercel doesn't crash 
+  })
     .then(() => {
       console.log('Connected to MongoDB');
     })
