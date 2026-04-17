@@ -15,8 +15,8 @@ const options = {
     },
     servers: [
       {
-        url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000',
-        description: process.env.VERCEL_URL ? 'Production server' : 'Development server'
+        url: '/',
+        description: 'Current environment'
       }
     ],
     tags: [
