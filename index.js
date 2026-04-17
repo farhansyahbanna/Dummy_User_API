@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const userRoutes = require('./src/routes/userRoutes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./src/swagger/swagger');
+const connectDB = require('./src/config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,20 @@ const swaggerUiOptions = {
 };
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, swaggerUiOptions));
 
+// Hubungkan ke Database sebelum masuk ke Routes (Serverless Pattern)
+app.use(async (req, res, next) => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is extremely not defined in environment variables');
+    }
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.status(500).json({ success: false, message: 'Database Connection Error. Please try again later.' });
+  }
+});
+
 // Routes
 app.use('/api/users', userRoutes);
 
@@ -39,21 +54,6 @@ app.get('/', (req, res) => {
     }
   });
 });
-
-// Connect to MongoDB
-if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI, { 
-    serverSelectionTimeoutMS: 5000 // Timeout early so Vercel doesn't crash 
-  })
-    .then(() => {
-      console.log('Connected to MongoDB');
-    })
-    .catch(err => {
-      console.error('MongoDB connection error:', err);
-    });
-} else {
-  console.log('MONGODB_URI is not defined in environment variables');
-}
 
 // Only listen on local environment
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
